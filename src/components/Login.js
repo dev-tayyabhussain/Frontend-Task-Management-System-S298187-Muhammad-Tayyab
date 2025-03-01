@@ -1,14 +1,33 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import { FaUserCircle } from "react-icons/fa";
 
 const Login = () => {
     const [credentials, setCredentials] = useState({ username: "", password: "" });
     const [error, setError] = useState("");
-
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        try {
+            const response = await api.post("/api/login/", credentials);
 
+            const userData = JSON.parse(atob(response.data.access.split(".")[1]));
+            login(response.data.access, {
+                id: userData.user_id,
+                username: credentials.username,
+                is_staff: response.data.is_staff,
+            });
+
+            navigate("/dashboard");
+        } catch (error) {
+            setError("Login failed. Please check your credentials.");
+            console.error("Login failed:", error);
+        }
     };
 
     return (
